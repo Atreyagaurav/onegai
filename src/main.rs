@@ -1,5 +1,6 @@
 use clap::{Parser, Subcommand};
 use std::path::PathBuf;
+use std::time::{Instant};
 
 mod renderer;
 mod replacements;
@@ -43,6 +44,7 @@ enum Action {
 
 fn main() {
     let args = Cli::parse();
+    let start = Instant::now();
     match args.action {
         Action::Html {
             ignore_match,
@@ -58,4 +60,6 @@ fn main() {
             output_file,
         } => translator::translate(input_file, output_file),
     }
+    let duration = start.elapsed();
+    println!("Time Elapsed: {:?}", duration);
 }
