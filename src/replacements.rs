@@ -73,7 +73,7 @@ fn replace_string(rep: &Replacements, contents: String) -> String {
             let rep_dict: HashMap<String, String> =
                 serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string())
                     .expect(&format!("Cannot parse contents of key: {}.", &rule.key));
-            output = replace_hashmap(output, rep_dict);
+            output = replace_hashmap(output, &rep_dict);
         } else {
             if rule.split {
                 let (first_name, last_name) = rule.honorifics.unwrap();
@@ -82,7 +82,7 @@ fn replace_string(rep: &Replacements, contents: String) -> String {
                         .expect(&format!("Cannot parse contents of key: {}.", &rule.key));
                 let names_dict =
                     generate_names_hasmap(rep_dict, &rep.honorifics, first_name, last_name);
-                output = replace_hashmap(output, names_dict);
+                output = replace_hashmap(output, &names_dict);
             } else {
                 let (first_name, _) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, String> =
@@ -98,9 +98,9 @@ fn replace_string(rep: &Replacements, contents: String) -> String {
                         );
                     }
                 }
-                output = replace_hashmap(output, hon_dict);
+                output = replace_hashmap(output, &hon_dict);
                 if !first_name {
-                    output = replace_hashmap(output, rep_dict);
+                    output = replace_hashmap(output, &rep_dict);
                 }
             }
         }
@@ -139,7 +139,7 @@ fn generate_names_hasmap(
     return names_dict;
 }
 
-fn replace_hashmap(contents: String, map: HashMap<String, String>) -> String {
+fn replace_hashmap(contents: String, map: &HashMap<String, String>) -> String {
     let mut output: String = contents;
     for (find, replace) in map.iter() {
         let count = output.matches(find).count();
