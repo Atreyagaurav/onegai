@@ -2,6 +2,7 @@ use clap::{Parser, Subcommand};
 use std::path::PathBuf;
 use std::time::Instant;
 
+mod ncode;
 mod renderer;
 mod replacements;
 mod translator;
@@ -46,6 +47,13 @@ enum Action {
         /// Output file in English
         output_file: PathBuf,
     },
+    /// Download a web novel chapter from syosetu into a text file
+    Download {
+        /// Chapter url
+        ncode_url: String,
+        /// Output file to save the chapter
+        output_file: PathBuf,
+    },
 }
 
 fn main() {
@@ -67,6 +75,10 @@ fn main() {
             input_file,
             output_file,
         } => translator::translate(skip_lines, append, input_file, output_file),
+        Action::Download {
+            ncode_url,
+            output_file,
+        } => ncode::download_ncode(ncode_url, output_file),
     }
     let duration = start.elapsed();
     eprintln!("Time Elapsed: {:?}", duration);
