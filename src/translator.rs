@@ -1,10 +1,9 @@
+use indicatif::{ProgressBar, ProgressStyle};
 use rust_bert::pipelines::common::ModelType;
 use rust_bert::pipelines::translation::{Language, TranslationModelBuilder};
 use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, LineWriter, Write};
 use std::path::PathBuf;
-use indicatif::{ProgressBar, ProgressStyle};
-
 
 pub fn translate(skip_lines: usize, append: bool, input_file: PathBuf, output_file: PathBuf) {
     let file = File::open(&input_file).expect("Couldn't open input file.");
@@ -29,9 +28,9 @@ pub fn translate(skip_lines: usize, append: bool, input_file: PathBuf, output_fi
     let pbar = get_progress_bar(input_file, skip_lines);
     let mut line: String;
     for _ in 0..skip_lines {
-	reader_lines.next();
+        reader_lines.next();
     }
-    
+
     for (i, input_line) in reader_lines.enumerate() {
         line = input_line.unwrap();
         if line.trim() != "" {
@@ -45,19 +44,19 @@ pub fn translate(skip_lines: usize, append: bool, input_file: PathBuf, output_fi
         writer
             .write_all(b"\n")
             .expect("Couldn't Write to Output File.");
-	pbar.set_position(i.try_into().unwrap());
+        pbar.set_position(i.try_into().unwrap());
     }
 }
 
-
-fn get_progress_bar(input_file:PathBuf, skip_lines:usize) -> ProgressBar{
+fn get_progress_bar(input_file: PathBuf, skip_lines: usize) -> ProgressBar {
     let file = File::open(&input_file).expect("Couldn't open input file.");
     let reader = BufReader::new(file);
-    let lines_len:u64 = reader.lines().count().try_into().unwrap();
+    let lines_len: u64 = reader.lines().count().try_into().unwrap();
     let pbar = ProgressBar::new(lines_len);
 
-    let sty = ProgressStyle::default_bar().template("{prefix:20} [{percent:>3.green}] {bar:50} {pos:>7}/{len:7} {eta} {msg}"
-    ).unwrap();
+    let sty = ProgressStyle::default_bar()
+        .template("{prefix:20} [{percent:>3.green}] {bar:50} {pos:>7}/{len:7} {eta} {msg}")
+        .unwrap();
     pbar.set_style(sty);
     pbar.set_position(skip_lines.try_into().unwrap());
     pbar.set_prefix("Translating");
