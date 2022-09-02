@@ -1,3 +1,4 @@
+use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{collections::HashMap, fs, path::PathBuf};
@@ -49,7 +50,7 @@ fn replace_string(rep: &Replacements, contents: String) -> String {
     for rule in rep.rules.iter() {
         println!(
             "{} [{}]: {}",
-            rule.name,
+            format!("* {}", rule.name).bold().green(),
             rule.key,
             rule.description.as_ref().unwrap_or(&String::from(""))
         );
@@ -115,7 +116,10 @@ fn replace_names(
         let en_names: Vec<&str> = en_name.split(" ").collect();
         assert!(
             en_names.len() == jp_names.len(),
-            "English and Japanese names are different length"
+            "{}: {:?} {:?}",
+            "English and Japanese names are different length",
+            en_names,
+            jp_names
         );
         for i in 0..en_names.len() {
             for (hon_jp, hon_en) in honorifics.iter() {
@@ -161,7 +165,7 @@ fn replace_single(contents: String, find: &String, replace: &String) -> String {
     let count = output.matches(find).count();
     if count > 0 {
         output = output.replace(find, &replace);
-        println!("{} [{}]→ {} ({})", find, find.len(), replace, count);
+        println!("{} → {} ({})", find, replace, format!("{}", count).bold());
     }
     return output;
 }
