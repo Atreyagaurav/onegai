@@ -36,7 +36,9 @@ impl Ncode {
     fn save(self, outfile: PathBuf) {
         let output_file = File::create(outfile).expect("Couldn't create file.");
         let mut writer = LineWriter::new(output_file);
-        writer.write(&self.download().into_bytes()).unwrap();
+        writer
+            .write(&format!("{}\n", &self.download().trim()).into_bytes())
+            .unwrap();
     }
 }
 

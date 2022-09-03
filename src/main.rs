@@ -18,6 +18,9 @@ struct Cli {
 enum Action {
     /// Build a html page for viewing the file contents
     Combine {
+        /// Title of the Generated HTML
+        #[clap(short, long, default_value = "Onegai TL | Combined Content")]
+        title: String,
         /// Ignore Lines match error
         #[clap(short, long, action)]
         ignore_match: bool,
@@ -80,9 +83,10 @@ fn main() {
     let start = Instant::now();
     match args.action {
         Action::Combine {
+            title,
             ignore_match,
             input_files,
-        } => renderer::make_html(ignore_match, input_files),
+        } => renderer::make_html(title, ignore_match, input_files),
         Action::Replace {
             threshold,
             replacement_json,
