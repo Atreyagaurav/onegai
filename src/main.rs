@@ -26,7 +26,21 @@ enum Action {
     },
     /// Replace the terms according to rules on json file
     Replace {
+        /// Replacement Threshold for names without honorifics
+        ///
+        /// For example, threshold of 3 means names with single kanji
+        /// won't be replaced if it comes without honorifics. To make
+        /// it easier to decide on this the length of strings are
+        /// shown in square brackets after them.
+        #[clap(short, long, default_value = "3")]
+        threshold: usize,
         /// Replacement Json
+        ///
+        /// Replacement Json must have 3 fields, rules honorifics and
+        /// contents.  `rules' contains the order of replacement and
+        /// extra informations, honorifics are list of honorifics to
+        /// cycle through for each name, and contents are the
+        /// replacement contents.
         #[clap(short, long)]
         replacement_json: PathBuf,
         /// Input file
@@ -50,6 +64,11 @@ enum Action {
     /// Download a web novel chapter from syosetu into a text file
     Download {
         /// Chapter url
+        ///
+        /// Chapter url should be from syosetu.com. Examples of
+        /// supported urls are:
+        /// https://ncode.syosetu.com/n2267be/561/,
+        /// ncode.syosetu.com/n2267be/561/, n2267be/561/, etc
         ncode_url: String,
         /// Output file to save the chapter
         output_file: PathBuf,
@@ -65,10 +84,11 @@ fn main() {
             input_files,
         } => renderer::make_html(ignore_match, input_files),
         Action::Replace {
+            threshold,
             replacement_json,
             input_file,
             output_file,
-        } => replacements::replace_from_json(replacement_json, input_file, output_file),
+        } => replacements::replace_from_json(threshold, replacement_json, input_file, output_file),
         Action::Translate {
             skip_lines,
             append,

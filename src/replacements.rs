@@ -25,7 +25,12 @@ struct Replacements {
     contents: serde_json::Value,
 }
 
-pub fn replace_from_json(replacement_json: PathBuf, input_file: PathBuf, output_file: PathBuf) {
+pub fn replace_from_json(
+    threshold: usize,
+    replacement_json: PathBuf,
+    input_file: PathBuf,
+    output_file: PathBuf,
+) {
     let replace_json_contents =
         fs::read_to_string(replacement_json).expect("Cannot read Replacement File.");
     let rep_cont: Replacements =
@@ -33,7 +38,7 @@ pub fn replace_from_json(replacement_json: PathBuf, input_file: PathBuf, output_
     verify_rules(&rep_cont);
 
     let input_file_contents = fs::read_to_string(input_file).expect("Cannot read input file.");
-    let output_file_contents = replace_string(&rep_cont, input_file_contents);
+    let output_file_contents = replace_string(&rep_cont, input_file_contents, threshold);
     fs::write(output_file, output_file_contents).expect("Cannot write to output file.");
 }
 
@@ -45,7 +50,7 @@ fn verify_rules(rep: &Replacements) {
     }
 }
 
-fn replace_string(rep: &Replacements, contents: String) -> String {
+fn replace_string(rep: &Replacements, contents: String, threshold: usize) -> String {
     let mut output: String = contents;
     for rule in rep.rules.iter() {
         println!(
@@ -67,7 +72,14 @@ fn replace_string(rep: &Replacements, contents: String) -> String {
                 let rep_dict: HashMap<String, Vec<String>> =
                     serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string())
                         .expect(&format!("Cannot parse contents of key: {}.", &rule.key));
-                output = replace_names(output, &rep_dict, &rep.honorifics, first_name, last_name);
+                output = replace_names(
+                    output,
+                    &rep_dict,
+                    &rep.honorifics,
+                    first_name,
+                    last_name,
+                    threshold,
+                );
             } else {
                 let (first_name, _) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, String> =
@@ -99,6 +111,7 @@ fn replace_names(
     honorifics: &HashMap<String, String>,
     first_name: bool,
     last_name: bool,
+    threshold: usize,
 ) -> String {
     let mut output: String = contents;
     for (en_name, jp_names) in rep_dict.iter() {
@@ -129,18 +142,13 @@ fn replace_names(
                     &format!("{}-{}", en_names[i], hon_en),
                 );
             }
-            // len > 3 to filter names with single kanji (len is 3 for
-            // one kanji), so that they won't be replaced in random
-            // words.  Those names will only be replaced when they
-            // occur with honorifics. Very hard to tell it's a name
-            // from the code otherwise.
-            if i == 0 && !first_name && jp_names[i].len() > 3 {
+            if i == 0 && !first_name && jp_names[i].len() > threshold {
                 output = replace_single(
                     output,
                     &format!("{}", jp_names[i]),
                     &format!("{}", en_names[i]),
                 );
-            } else if i == en_names.len() - 1 && !last_name && jp_names[i].len() > 3 {
+            } else if i == en_names.len() - 1 && !last_name && jp_names[i].len() > threshold {
                 output = replace_single(
                     output,
                     &format!("{}", jp_names[i]),
@@ -165,7 +173,13 @@ fn replace_single(contents: String, find: &String, replace: &String) -> String {
     let count = output.matches(find).count();
     if count > 0 {
         output = output.replace(find, &replace);
-        println!("{} → {} ({})", find, replace, format!("{}", count).bold());
+        println!(
+            "{} [{}] → {} ({})",
+            find,
+            find.len(),
+            replace,
+            format!("{}", count).bold()
+        );
     }
     return output;
 }

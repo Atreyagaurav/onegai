@@ -55,7 +55,7 @@ fn get_progress_bar(input_file: PathBuf, skip_lines: usize) -> ProgressBar {
     let pbar = ProgressBar::new(lines_len);
 
     let sty = ProgressStyle::default_bar()
-        .template("{prefix:20} [{percent:>3.green}] {bar:50} {pos:>7}/{len:7} {eta} {msg}")
+        .template("{prefix:20} [{percent:>3.green}] {bar:50} {pos:>7}/{len:7} ETA: {eta} {msg}")
         .unwrap();
     pbar.set_style(sty);
     pbar.set_position(skip_lines.try_into().unwrap());
