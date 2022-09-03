@@ -36,7 +36,7 @@ impl ChapterLine {
             LineType::Contents => self.contents.push(contents),
             LineType::ParagraphBreak => {
                 if contents.trim() != "" {
-                    eprint!("{}: {}", self.linenum, contents);
+                    eprint!("Line {}: {}\n", self.linenum, contents);
                     panic!("Contents in Paragraph Break.")
                 }
             }
@@ -44,7 +44,7 @@ impl ChapterLine {
     }
 }
 
-pub fn make_html(title: String, ignore_match_err: bool, input_files: Vec<PathBuf>) {
+pub fn make_html(title: String, simple_html: bool, input_files: Vec<PathBuf>) {
     let lines: Vec<usize> = input_files
         .iter()
         .map(|f| {
@@ -66,16 +66,18 @@ pub fn make_html(title: String, ignore_match_err: bool, input_files: Vec<PathBuf
         })
         .collect();
 
-    if !lines.iter().all(|v| *v == lines[0]) {
-        if !ignore_match_err {
-            panic!("File lengths doesn't match. {:?}", lines);
-        }
+    if simple_html {
         println!(
             "{}",
             get_simple_html(title, num_lines, readers).into_string()
         );
         return;
     }
+
+    if !lines.iter().all(|v| *v == lines[0]) {
+        panic!("File lengths doesn't match. {:?}", lines);
+    }
+
     let contents = get_file_contents(readers.iter_mut(), num_lines);
     println!("{}", get_chapter_html(title, contents).into_string());
 }

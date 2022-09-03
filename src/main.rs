@@ -21,9 +21,13 @@ enum Action {
         /// Title of the Generated HTML
         #[clap(short, long, default_value = "Onegai TL | Combined Content")]
         title: String,
-        /// Ignore Lines match error
+        /// Make a simple html without any contents check
+        ///
+        /// When your translations are not made with onegai tools, the
+        /// lines might not match, this will help you generate simple
+        /// html to see where the descripancy is at.
         #[clap(short, long, action)]
-        ignore_match: bool,
+        simple_html: bool,
         /// Input files in different languages
         input_files: Vec<PathBuf>,
     },
@@ -84,9 +88,9 @@ fn main() {
     match args.action {
         Action::Combine {
             title,
-            ignore_match,
+            simple_html,
             input_files,
-        } => renderer::make_html(title, ignore_match, input_files),
+        } => renderer::make_html(title, simple_html, input_files),
         Action::Replace {
             threshold,
             replacement_json,
