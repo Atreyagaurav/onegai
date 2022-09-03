@@ -1,0 +1,21 @@
+{
+  "rules": [
+    {
+      "key": "basic",
+      "name": "Basic Symbols",
+      "split": false
+    }
+  ],
+  "honorifics": {},
+  "contents": {
+    "basic": {
+      "　": " ",
+      "「": "\"",
+      "」": "\"",
+      "―": "-",
+      "『": "\"",
+      "』": "\"",
+      "、": ","
+    }
+  }
+}

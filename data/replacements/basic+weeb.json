@@ -1,0 +1,56 @@
+{
+  "rules": [
+    {
+      "key": "basic",
+      "name": "Basic Symbols",
+      "split": false
+    },
+    {
+      "key": "name-like",
+      "name": "Name like terms",
+      "split": false,
+      "honorifics": [
+        true,
+        false
+      ]
+    },
+    {
+      "key": "cleaning-up",
+      "name": "Final Cleaning Up Terms",
+      "split": false
+    }
+  ],
+  "honorifics": {
+    "さん": "san",
+    "くん": "kun",
+    "ちゃん": "chan",
+    "君": "kun",
+    "様": "sama",
+    "先輩": "senpai",
+    "先生": "sensei",
+    "殿": "dono",
+    "上": "ue"
+  },
+  "contents": {
+    "basic": {
+      "　": " ",
+      "「": "\"",
+      "」": "\"",
+      "―": "-",
+      "『": "\"",
+      "』": "\"",
+      "、": ","
+    },
+    "name-like": {
+      "お兄": "Onii",
+      "兄": "Nii",
+      "お姉": "Onee",
+      "姉": "Nee"
+    },
+    "cleaning-up": {
+      "先輩": "senpai",
+      "先生": "sensei",
+      "会長": "kaichou"
+    }
+  }
+}
