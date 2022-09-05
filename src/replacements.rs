@@ -71,7 +71,7 @@ fn verify_rules(rep: &Replacements) -> Result<(), String> {
                 ));
             }
         }
-        match rep.contents.get(rule.key.clone()) {
+        match rep.contents.get(&rule.key) {
             Some(_) => (),
             None => {
                 return Err(format!(

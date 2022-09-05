@@ -47,6 +47,11 @@
       "split": false
     },
     {
+      "key": "short-specials",
+      "name": "Special Terms to be Replaced Last",
+      "split": false
+    },
+    {
       "key": "name-like",
       "name": "Name like terms",
       "split": false,
@@ -303,8 +308,6 @@
       "未確認魔法研究会": "Unidentified Magic Research Group",
       "人体発火": "Jintai Hakka",
       "分解魔法": "Decompostion Magic",
-      "分解": "Decomposition",
-      "再成": "Regrowth",
       "エレメンタル・サイト": "Elemental Sight",
       "精霊の眼": "Eye of the Spirits",
       "事象干渉力": "Event Interference Force",
@@ -343,14 +346,12 @@
       "専務理事": "executive director",
       "メイジァン・ソサエティ": "Magian Society",
       "代表権": "vice president",
-      "魔法資質": "Magic Factor",
       "マジョリティ": "Majority",
       "高千穂": "Takachiho",
       "戦略級魔法": "Strategic-Class Magic",
       "戦略級魔法師": "Strategic-Class Magician",
       "個型電車": "Cabinet",
       "霊感": "Inspiration",
-      "勾玉": "Magatama",
       "巳焼島": "Miyakishima",
       "魔法資質保有者": "Magian",
       "百家数字付き": "Hyatsuke Numbers",
@@ -358,10 +359,6 @@
       "衛星軌道居住施設": "Orbital Residence",
       "二一〇〇": "2100",
       "インド・ペルシア連邦": "IPU",
-      "想子": "Psion",
-      "霊子": "Pushion",
-      "勾玉": "Magatama",
-      "遺物": "Artifact",
       "聖遺物": "Sacred Relic",
       "古式魔法": "Ancient Magic",
       "独立魔装大隊": "Independent Magic-Equipped Battalion",
@@ -373,6 +370,15 @@
       "魔法師犯罪者": "criminal magister",
       "動画電話": "videophone"
     },
+      "short-specials": {
+      "想子": "Psion",
+      "霊子": "Pushion",
+      "勾玉": "Magatama",
+      "遺物": "Artifact",
+      "魔法資質": "Magic Factor",
+      "分解": "Decomposition",
+      "再成": "Regrowth"
+      },
     "name-like": {
       "Onii": "お兄",
       "Nii": "兄",

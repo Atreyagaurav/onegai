@@ -1,6 +1,6 @@
 use maud::{html, Markup, DOCTYPE};
 use std::fs::File;
-use std::io::{BufRead, BufReader, Lines};
+use std::io::{BufRead, BufReader, LineWriter, Lines, Write};
 use std::path::PathBuf;
 use std::slice::IterMut;
 
@@ -47,12 +47,13 @@ impl ChapterLine {
 pub fn make_html(
     title: String,
     simple_html: bool,
+    output_file: PathBuf,
     input_files: Vec<PathBuf>,
 ) -> Result<(), String> {
     let lines: Vec<usize> = input_files
         .iter()
         .map(|f| {
-            let file = File::open(f.clone()).expect(&format!(
+            let file = File::open(&f).expect(&format!(
                 "Couldn't open input file {}.",
                 f.as_os_str().to_str().unwrap()
             ));
@@ -64,26 +65,38 @@ pub fn make_html(
     let mut readers: Vec<Lines<BufReader<File>>> = input_files
         .iter()
         .map(|fp| {
-            let file = File::open(fp.clone()).unwrap();
+            let file = File::open(&fp).unwrap();
             let lines = BufReader::new(file).lines();
             return lines;
         })
         .collect();
 
+    let out_file = match File::create(&output_file) {
+        Ok(f) => f,
+        Err(e) => return Err(format!("{}\n{:?}", "Cannot create output file", e)),
+    };
+    let mut writer = LineWriter::new(out_file);
     if simple_html {
-        println!(
-            "{}",
-            get_simple_html(title, num_lines, readers).into_string()
-        );
-        return Ok(());
+        match writer.write(
+            get_simple_html(title, num_lines, readers)
+                .into_string()
+                .as_bytes(),
+        ) {
+            Ok(_) => return Ok(()),
+            Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
+        };
     }
 
     if !lines.iter().all(|v| *v == lines[0]) {
-        panic!("File lengths doesn't match. {:?}", lines);
+        return Err(format!("{}: {:?}", "File lengths doesn't match", lines));
     }
 
     let contents = get_file_contents(readers.iter_mut(), num_lines);
-    println!("{}", get_chapter_html(title, contents).into_string());
+    match writer.write(get_chapter_html(title, contents).into_string().as_bytes()) {
+        Ok(_) => (),
+        Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
+    };
+    println!("Output saved: {:?}", output_file);
     Ok(())
 }
 

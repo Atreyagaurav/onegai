@@ -65,7 +65,7 @@ pub fn translate(
     for (i, input_line) in reader_lines.enumerate() {
         line = input_line.unwrap();
         if line.trim() != "" {
-            let output2 = model.translate(&[line.clone()], Language::Japanese, Language::English);
+            let output2 = model.translate(&[&line], Language::Japanese, Language::English);
             for sentence in output2 {
                 match writer.write_all(sentence.join(" ").as_bytes()) {
                     Ok(_) => (),

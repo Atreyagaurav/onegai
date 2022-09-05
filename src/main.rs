@@ -20,7 +20,7 @@ enum Action {
     /// Build a html page for viewing the file contents
     Combine {
         /// Title of the Generated HTML
-        #[clap(short, long, default_value = "Onegai TL | Combined Content")]
+        #[clap(short, long, default_value = "Onegai | Combined Content")]
         title: String,
         /// Make a simple html without any contents check
         ///
@@ -29,6 +29,9 @@ enum Action {
         /// html to see where the descripancy is at.
         #[clap(short, long, action)]
         simple_html: bool,
+        /// Output file (html) to save combined page.
+        #[clap(short, long, default_value = "onegai-combined.html")]
+        output_file: PathBuf,
         /// Input files in different languages
         input_files: Vec<PathBuf>,
     },
@@ -93,8 +96,9 @@ fn main() {
         Action::Combine {
             title,
             simple_html,
+            output_file,
             input_files,
-        } => renderer::make_html(title, simple_html, input_files),
+        } => renderer::make_html(title, simple_html, output_file, input_files),
         Action::Replace {
             threshold,
             replacement_json,
