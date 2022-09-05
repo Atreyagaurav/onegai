@@ -30,27 +30,65 @@ pub fn replace_from_json(
     replacement_json: PathBuf,
     input_file: PathBuf,
     output_file: PathBuf,
-) {
-    let replace_json_contents =
-        fs::read_to_string(replacement_json).expect("Cannot read Replacement File.");
-    let rep_cont: Replacements =
-        serde_json::from_str(&replace_json_contents).expect("Can't parse Json");
-    verify_rules(&rep_cont);
+) -> Result<(), String> {
+    let replace_json_contents = match fs::read_to_string(replacement_json) {
+        Ok(c) => c,
+        Err(e) => return Err(format!("{}\n{:?}", "Cannot read Replacement File.", e,)),
+    };
+    let rep_cont: Replacements = match serde_json::from_str(&replace_json_contents) {
+        Ok(j) => j,
+        Err(e) => return Err(format!("{}\n{:?}", "Can't parse Json", e)),
+    };
 
-    let input_file_contents = fs::read_to_string(input_file).expect("Cannot read input file.");
-    let output_file_contents = replace_string(&rep_cont, input_file_contents, threshold);
-    fs::write(output_file, output_file_contents).expect("Cannot write to output file.");
+    match verify_rules(&rep_cont) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    };
+
+    let input_file_contents = match fs::read_to_string(input_file) {
+        Ok(c) => c,
+        Err(e) => return Err(format!("{}\n{:?}", "Cannot read input file.", e)),
+    };
+    let output_file_contents = match replace_string(&rep_cont, input_file_contents, threshold) {
+        Ok(c) => c,
+        Err(e) => return Err(e),
+    };
+    match fs::write(output_file, output_file_contents) {
+        Ok(_) => (),
+        Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file.", e)),
+    };
+    Ok(())
 }
 
-fn verify_rules(rep: &Replacements) {
+fn verify_rules(rep: &Replacements) -> Result<(), String> {
     for rule in rep.rules.iter() {
-        rep.contents
-            .get(rule.key.clone())
-            .expect(&format!("No Key: {} found in replacements json", rule.key));
+        if rule.honorifics.is_none() {
+            // not a name replacement
+            if rule.split == true {
+                return Err(format!(
+                    "{} [{}]: {}",
+                    "Invalid Rule", rule.key, "Cannot split non-name replacements."
+                ));
+            }
+        }
+        match rep.contents.get(rule.key.clone()) {
+            Some(_) => (),
+            None => {
+                return Err(format!(
+                    "Key [{}] from rules not found in replacements json",
+                    rule.key
+                ))
+            }
+        };
     }
+    Ok(())
 }
 
-fn replace_string(rep: &Replacements, contents: String, threshold: usize) -> String {
+fn replace_string(
+    rep: &Replacements,
+    contents: String,
+    threshold: usize,
+) -> Result<String, String> {
     let mut output: String = contents;
     for rule in rep.rules.iter() {
         println!(
@@ -60,31 +98,53 @@ fn replace_string(rep: &Replacements, contents: String, threshold: usize) -> Str
             rule.description.as_ref().unwrap_or(&String::from(""))
         );
         if rule.honorifics.is_none() {
-            // not a name replacement
-            assert!(rule.split == false, "Cannot split non-name replacements.");
             let rep_dict: HashMap<String, String> =
-                serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string())
-                    .expect(&format!("Cannot parse contents of key: {}.", &rule.key));
+                match serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string()) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        return Err(format!(
+                            "{} [{}]: {}\n{:?}",
+                            "Invalid JSON", &rule.key, "Cannot parse contents of key", e
+                        ))
+                    }
+                };
             output = replace_hashmap(output, &rep_dict);
         } else {
             if rule.split {
                 let (first_name, last_name) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, Vec<String>> =
-                    serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string())
-                        .expect(&format!("Cannot parse contents of key: {}.", &rule.key));
-                output = replace_names(
+                    match serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string()) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            return Err(format!(
+                                "{} [{}]: {}\n{:?}",
+                                "Invalid JSON", &rule.key, "Cannot parse contents of key", e
+                            ))
+                        }
+                    };
+                output = match replace_names(
                     output,
                     &rep_dict,
                     &rep.honorifics,
                     first_name,
                     last_name,
                     threshold,
-                );
+                ) {
+                    Ok(o) => o,
+                    Err(e) => return Err(e),
+                };
             } else {
                 let (first_name, _) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, String> =
-                    serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string())
-                        .expect(&format!("Cannot parse contents of key: {}.", &rule.key));
+                    match serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string()) {
+                        Ok(m) => m,
+                        Err(e) => {
+                            return Err(format!(
+                                "{} [{}]: {}\n{:?}",
+                                "Invalid JSON", &rule.key, "Cannot parse contents of key", e
+                            ))
+                        }
+                    };
                 let mut hon_dict = HashMap::<String, String>::new();
 
                 for (en_name, jp_name) in rep_dict.iter() {
@@ -102,7 +162,7 @@ fn replace_string(rep: &Replacements, contents: String, threshold: usize) -> Str
             }
         }
     }
-    return output;
+    return Ok(output);
 }
 
 fn replace_names(
@@ -112,7 +172,7 @@ fn replace_names(
     first_name: bool,
     last_name: bool,
     threshold: usize,
-) -> String {
+) -> Result<String, String> {
     let mut output: String = contents;
     for (en_name, jp_names) in rep_dict.iter() {
         for (hon_jp, hon_en) in honorifics.iter() {
@@ -127,13 +187,12 @@ fn replace_names(
     }
     for (en_name, jp_names) in rep_dict.iter() {
         let en_names: Vec<&str> = en_name.split(" ").collect();
-        assert!(
-            en_names.len() == jp_names.len(),
-            "{}: {:?} {:?}",
-            "English and Japanese names are different length",
-            en_names,
-            jp_names
-        );
+        if en_names.len() != jp_names.len() {
+            return Err(format!(
+                "{}: {:?} {:?}",
+                "English and Japanese names are different length for entry", en_names, jp_names
+            ));
+        }
         for i in 0..en_names.len() {
             for (hon_jp, hon_en) in honorifics.iter() {
                 output = replace_single(
@@ -157,7 +216,7 @@ fn replace_names(
             }
         }
     }
-    return output;
+    return Ok(output);
 }
 
 fn replace_hashmap(contents: String, map: &HashMap<String, String>) -> String {

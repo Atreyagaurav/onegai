@@ -44,7 +44,11 @@ impl ChapterLine {
     }
 }
 
-pub fn make_html(title: String, simple_html: bool, input_files: Vec<PathBuf>) {
+pub fn make_html(
+    title: String,
+    simple_html: bool,
+    input_files: Vec<PathBuf>,
+) -> Result<(), String> {
     let lines: Vec<usize> = input_files
         .iter()
         .map(|f| {
@@ -71,7 +75,7 @@ pub fn make_html(title: String, simple_html: bool, input_files: Vec<PathBuf>) {
             "{}",
             get_simple_html(title, num_lines, readers).into_string()
         );
-        return;
+        return Ok(());
     }
 
     if !lines.iter().all(|v| *v == lines[0]) {
@@ -80,6 +84,7 @@ pub fn make_html(title: String, simple_html: bool, input_files: Vec<PathBuf>) {
 
     let contents = get_file_contents(readers.iter_mut(), num_lines);
     println!("{}", get_chapter_html(title, contents).into_string());
+    Ok(())
 }
 
 fn get_simple_html(

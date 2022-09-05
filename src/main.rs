@@ -1,4 +1,5 @@
 use clap::{Parser, Subcommand};
+use colored::Colorize;
 use std::path::PathBuf;
 use std::time::Instant;
 
@@ -60,9 +61,12 @@ enum Action {
         /// Number of starting lines to skip translation
         #[clap(short, long, default_value = "0")]
         skip_lines: usize,
-        /// Append to the output file instead of overwriting
+        /// Append to the output file
         #[clap(short, long, action)]
         append: bool,
+        /// Overwrite the output file
+        #[clap(short, long, action)]
+        overwrite: bool,
         /// Input file in Japanese
         input_file: PathBuf,
         /// Output file in English
@@ -85,7 +89,7 @@ enum Action {
 fn main() {
     let args = Cli::parse();
     let start = Instant::now();
-    match args.action {
+    let tool_result = match args.action {
         Action::Combine {
             title,
             simple_html,
@@ -100,14 +104,19 @@ fn main() {
         Action::Translate {
             skip_lines,
             append,
+            overwrite,
             input_file,
             output_file,
-        } => translator::translate(skip_lines, append, input_file, output_file),
+        } => translator::translate(skip_lines, append, overwrite, input_file, output_file),
         Action::Download {
             ncode_url,
             output_file,
         } => ncode::download_ncode(ncode_url, output_file),
-    }
+    };
     let duration = start.elapsed();
-    eprintln!("Time Elapsed: {:?}", duration);
+    match tool_result {
+        Ok(_) => (),
+        Err(e) => eprintln!("{}: {}", "Dame".bright_red().bold(), e),
+    }
+    eprintln!("{}: {:?}", "Time Elapsed".blue().bold(), duration);
 }

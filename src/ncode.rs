@@ -1,3 +1,4 @@
+use colored::Colorize;
 use regex::Regex;
 use reqwest;
 use reqwest::header::USER_AGENT;
@@ -14,43 +15,64 @@ struct Ncode {
 }
 
 impl Ncode {
-    fn url(self) -> String {
+    fn url(&self) -> String {
         return format!("https://ncode.syosetu.com/{}/{}", self.novel, self.chapter);
     }
 
-    fn download(self) -> String {
+    fn download(&self) -> Result<String, String> {
         let client = reqwest::blocking::Client::new();
-        let body = client
+        let body = match client
             .get(self.url())
             .header(USER_AGENT, "My Rust Program 1.0")
             .send()
-            .expect("HTTP Req failed.");
+        {
+            Ok(b) => b,
+            Err(e) => return Err(format!("{}\n{:?}", "HTTP Req failed.", e)),
+        };
         let parsed = Document::from_read(body).unwrap();
-        let node: Node = parsed
-            .find(Attr("id", "novel_honbun"))
-            .next()
-            .expect("Ncode novel contents not found.");
-        return node.text();
+        let node: Node = match parsed.find(Attr("id", "novel_honbun")).next() {
+            Some(n) => n,
+            None => return Err(format!("{}", "Novel contents not found.")),
+        };
+        return Ok(node.text());
     }
 
-    fn save(self, outfile: PathBuf) {
+    fn save(&self, outfile: PathBuf) -> Result<(), String> {
         let output_file = File::create(outfile).expect("Couldn't create file.");
         let mut writer = LineWriter::new(output_file);
-        writer
-            .write(&format!("{}\n", &self.download().trim()).into_bytes())
-            .unwrap();
+        match self.download() {
+            Ok(contents) => match writer.write(&format!("{}\n", contents.trim()).into_bytes()) {
+                Ok(_) => (),
+                Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
+            },
+            Err(e) => return Err(e),
+        }
+        Ok(())
     }
 }
 
-pub fn download_ncode(address: String, outfile: PathBuf) {
+pub fn download_ncode(address: String, outfile: PathBuf) -> Result<(), String> {
     let ncode_re =
         Regex::new(r"^(https?://)?(ncode.syosetu.com/)?([a-z0-9]+)/([a-z0-9]+)/?$").unwrap();
-    let caps = ncode_re
-        .captures(&address)
-        .expect("Provided Url doesn't look like from syosetsu.com");
+    let caps = match ncode_re.captures(&address) {
+        Some(m) => m,
+        None => {
+            return Err(format!(
+                "{}\n{}",
+                "Provided Url doesn't look like from syosetsu.com",
+                "Use `help download' to get more details on valid urls"
+            ))
+        }
+    };
     let chapter = Ncode {
         novel: caps.get(3).unwrap().as_str().to_string(),
         chapter: caps.get(4).unwrap().as_str().to_string(),
     };
-    chapter.save(outfile);
+
+    println!("{}: {}", "Requesting".green().bold(), chapter.url());
+    match chapter.save(outfile) {
+        Ok(_) => (),
+        Err(e) => return Err(e),
+    };
+    Ok(())
 }
