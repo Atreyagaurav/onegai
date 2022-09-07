@@ -4,6 +4,19 @@ This is under development. And only a prototype is available for now.
 * Intro
 Tools for MTL development, rewrote some tools from [[https://github.com/Atreyagaurav/mtl-related-scripts][previous python scripts]], and a few new tools.
 
+* Contents :TOC:
+- [[#coming-soon][Coming Soon]]
+- [[#intro][Intro]]
+- [[#notes][Notes]]
+  - [[#resources][Resources]]
+- [[#installation-instructions][Installation Instructions]]
+  - [[#linux][Linux]]
+  - [[#windows][Windows]]
+- [[#usage][Usage]]
+- [[#example][Example]]
+  - [[#commands][Commands]]
+  - [[#screenshots][Screenshots]]
+
 * Notes
 ** Resources
 The translate function takes a lot of resources, around 8gb of ram to load the model and then will keep your cpu usage upto brim, powerful cpu means less time for total translation.
