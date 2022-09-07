@@ -1,0 +1,9 @@
+* Coming Soon
+This is under development.
+
+* Notes
+Runs from =cargo run= but to run the binaries I copied these to /use/lib/
+
+libtorch_cpu.so => /usr/lib/libtorch_cpu.so 
+libc10.so => /usr/lib/libc10.so
+libgomp-52f2fd74.so.1 => /usr/lib/libgomp-52f2fd74.so.1
