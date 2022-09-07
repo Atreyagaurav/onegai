@@ -77,7 +77,7 @@ pub fn translate(
             Ok(_) => (),
             Err(e) => return Err(format!("{}\n{:?}", "Couldn't Write to Output File", e)),
         };
-        pbar.set_position(i.try_into().unwrap());
+        pbar.set_position((i + skip_lines + 1).try_into().unwrap());
     }
     Ok(())
 }
