@@ -186,7 +186,6 @@ Requesting: https://ncode.syosetu.com/n2267be/561
 [[./images/help.png]]
 
 *** Translation
-There is protection built in so it doesn't overwrite your old translation files accidentally. You can also append to old file and skip the translated lines for seamless continuation. 
+There is protection built in so it doesn't overwrite your old translation files accidentally. You can also append to old file and skip the translated lines for seamless continuation. Use =--resume= for automatic resume. the combination of =--append= and =--skip-lines= can also it.
 [[./images/protect.png]]
 
-TODO: Make =--continue= flag that automatically continues old incomplete translation.
