@@ -9,6 +9,7 @@ pub fn translate(
     skip_lines: usize,
     append: bool,
     overwrite: bool,
+    resume: bool,
     input_file: PathBuf,
     output_file: PathBuf,
 ) -> Result<(), String> {
@@ -23,6 +24,13 @@ pub fn translate(
     };
     let mut reader_lines = BufReader::new(file).lines();
 
+    let append = resume || append;
+    let skip_lines = if resume {
+        count_lines_in_file(&output_file)
+    } else {
+        skip_lines
+    };
+
     let output_file = match OpenOptions::new()
         .write(true)
         .create(true)
@@ -36,7 +44,7 @@ pub fn translate(
             ErrorKind::AlreadyExists => {
                 return Err(concat!(
                     "Output File already exists, please use ",
-                    "`--overwrite` or `--append` flag."
+                    "`--resume`, `--overwrite` or `--append` flag."
                 )
                 .to_string())
             }
@@ -83,11 +91,8 @@ pub fn translate(
 }
 
 fn get_progress_bar(input_file: PathBuf, skip_lines: usize) -> ProgressBar {
-    let file = File::open(&input_file).expect("Couldn't open input file.");
-    let reader = BufReader::new(file);
-    let lines_len: u64 = reader.lines().count().try_into().unwrap();
+    let lines_len: u64 = count_lines_in_file(&input_file).try_into().unwrap();
     let pbar = ProgressBar::new(lines_len);
-
     let sty = ProgressStyle::default_bar()
         .template("{prefix:20} [{percent:>3.green}] {bar:50} {pos:>7}/{len:7} ETA: {eta} {msg}")
         .unwrap();
@@ -95,4 +100,10 @@ fn get_progress_bar(input_file: PathBuf, skip_lines: usize) -> ProgressBar {
     pbar.set_position(skip_lines.try_into().unwrap());
     pbar.set_prefix("Translating");
     return pbar;
+}
+
+fn count_lines_in_file(filename: &PathBuf) -> usize {
+    let file = File::open(&filename).expect(&format!("Couldn't open file: {:?}", filename));
+    let reader = BufReader::new(file);
+    reader.lines().count()
 }

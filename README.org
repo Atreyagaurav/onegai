@@ -1,9 +1,191 @@
 * Coming Soon
-This is under development.
+This is under development. And only a prototype is available for now.
+
+* Intro
+Tools for MTL development, rewrote some tools from [[https://github.com/Atreyagaurav/mtl-related-scripts][previous python scripts]], and a few new tools.
+
+* Contents :TOC:
+- [[#coming-soon][Coming Soon]]
+- [[#intro][Intro]]
+- [[#notes][Notes]]
+  - [[#resources][Resources]]
+- [[#installation-instructions][Installation Instructions]]
+  - [[#linux][Linux]]
+  - [[#windows][Windows]]
+- [[#usage][Usage]]
+- [[#example][Example]]
+  - [[#commands][Commands]]
+  - [[#screenshots][Screenshots]]
 
 * Notes
+** Resources
+The translate function takes a lot of resources, around 8gb of ram to load the model and then will keep your cpu usage upto brim, powerful cpu means less time for total translation.
+
+You also need reasonable disk space, few GB to download the translation model's data.
+
+* Installation Instructions
+** Linux
+You need rust installed.
+
 Runs from =cargo run= but to run the binaries I copied these to /use/lib/
 
-libtorch_cpu.so => /usr/lib/libtorch_cpu.so 
-libc10.so => /usr/lib/libc10.so
-libgomp-52f2fd74.so.1 => /usr/lib/libgomp-52f2fd74.so.1
+- libtorch_cpu.so => /usr/lib/libtorch_cpu.so 
+- libc10.so => /usr/lib/libc10.so
+- libgomp-52f2fd74.so.1 => /usr/lib/libgomp-52f2fd74.so.1
+
+Some problem with shared libraries. Need to look at it later.
+
+** Windows
+The compiled executable is in [[https://github.com/Atreyagaurav/onegai/releases/tag/v0.1][Releases]]. Download the =onegai-windows.zip= and run the executable =onegai.exe= from powershell (cmd doesn't do well with escape sequences). All the torch dlls are included in the zip.
+
+* Usage
+Use =-h= flag for usage instructions.
+#+begin_src bash :results type verbatim :wrap example
+./target/release/onegai -h  
+#+end_src
+
+#+RESULTS[8f7b02fb9b0c63c03269f792ad4b592980519ca8]:
+#+begin_example
+onegai 
+
+USAGE:
+    onegai <SUBCOMMAND>
+
+OPTIONS:
+    -h, --help    Print help information
+
+SUBCOMMANDS:
+    combine      Build a html page for viewing the file contents
+    download     Download a web novel chapter from syosetu into a text file
+    help         Print this message or the help of the given subcommand(s)
+    replace      Replace the terms according to rules on json file
+    translate    Translate from Japanese to English
+#+end_example
+
+Use =help <tool>= for further help:
+#+begin_src bash :results type verbatim :wrap example
+./target/release/onegai help download
+#+end_src
+
+#+RESULTS[80e09722b3d703ae673c49a9a9d145edb4ef4e4e]:
+#+begin_example
+onegai-download 
+Download a web novel chapter from syosetu into a text file
+
+USAGE:
+    onegai download <NCODE_URL> <OUTPUT_FILE>
+
+ARGS:
+    <NCODE_URL>
+            Chapter url
+            
+            Chapter url should be from syosetu.com. Examples of supported urls are:
+            https://ncode.syosetu.com/n2267be/561/, ncode.syosetu.com/n2267be/561/, n2267be/561/,
+            etc
+
+    <OUTPUT_FILE>
+            Output file to save the chapter
+
+OPTIONS:
+    -h, --help
+            Print help information
+#+end_example
+
+
+
+#+begin_src bash :results type verbatim :wrap example
+./target/release/onegai help replace
+#+end_src
+
+#+RESULTS[fbabf32e6abd21d8b6c10574733baffc3f46e44a]:
+#+begin_example
+onegai-replace 
+Replace the terms according to rules on json file
+
+USAGE:
+    onegai replace [OPTIONS] --replacement-json <REPLACEMENT_JSON> <INPUT_FILE> <OUTPUT_FILE>
+
+ARGS:
+    <INPUT_FILE>
+            Input file
+
+    <OUTPUT_FILE>
+            Output file
+
+OPTIONS:
+    -h, --help
+            Print help information
+
+    -r, --replacement-json <REPLACEMENT_JSON>
+            Replacement Json
+            
+            Replacement Json must have 3 fields, rules honorifics and contents.  `rules' contains
+            the order of replacement and extra informations, honorifics are list of honorifics to
+            cycle through for each name, and contents are the replacement contents.
+
+    -t, --threshold <THRESHOLD>
+            Replacement Threshold for names without honorifics
+            
+            For example, threshold of 3 means names with single kanji won't be replaced if it comes
+            without honorifics. To make it easier to decide on this the length of strings are shown
+            in square brackets after them.
+            
+            [default: 3]
+#+end_example
+
+* Example
+** Commands
+You can run these commands as a test:
+
+#+begin_src bash :results type verbatim :wrap example
+./target/release/onegai download ncode.syosetu.com/n2267be/561/ /tmp/demo-chapter.txt
+#+end_src
+
+#+RESULTS[9b3a03940cf12d60f1c038a1b948723061bfeb62]:
+#+begin_example
+Requesting: https://ncode.syosetu.com/n2267be/561
+#+end_example
+
+
+#+begin_src bash :results type verbatim :wrap example
+./target/release/onegai replace -r data/replacements/rezero.json /tmp/demo-chapter.txt /tmp/demo-chapter-rep.txt
+#+end_src
+
+#+RESULTS[e58296de1a1d5eb133b472a928157cb6a4e28533]:
+#+begin_example
+,* Basic Symbols [basic]: 
+― [3] → - (386)
+」 [3] → " (328)
+『 [3] → " (27)
+「 [3] → " (328)
+』 [3] → " (27)
+△▼△▼△▼△ [21] → ******* (14)
+　 [3] →   (904)
+,* Important Names [names]: 
+ナツキ・スバル [21] → Natsuki Subaru (10)
+グランヒルテ [18] → Granhiert (1)
+アストレア [15] → Astrea (1)
+スバル [9] → Subaru (258)
+,* Not Important Names [full-names]: 
+菜月・昴 [12] → Natsuki Subaru (1)
+,* Single Names [single-names]: 
+,* Semi Important Names [last-names]: 
+,* Special Terms [specials]: 
+,* Name like terms [name-like]: 
+姉様 [6] → Nee-sama (2)
+姉ちゃん [12] → Nee-chan (4)
+お兄ちゃん [15] → Onii-chan (1)
+お兄さん [12] → Onii-san (1)
+お姉さん [12] → Onee-san (1)
+#+end_example
+** Screenshots
+*** Download and Replace Tool
+[[./images/download-rep.png]]
+
+*** Help tool
+[[./images/help.png]]
+
+*** Translation
+There is protection built in so it doesn't overwrite your old translation files accidentally. You can also append to old file and skip the translated lines for seamless continuation. Use =--resume= for automatic resume. the combination of =--append= and =--skip-lines= can also it.
+[[./images/protect.png]]
+

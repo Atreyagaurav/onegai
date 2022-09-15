@@ -70,6 +70,9 @@ enum Action {
         /// Overwrite the output file
         #[clap(short, long, action)]
         overwrite: bool,
+        /// Resume the previous Translation
+        #[clap(short, long, action)]
+        resume: bool,
         /// Input file in Japanese
         input_file: PathBuf,
         /// Output file in English
@@ -109,9 +112,17 @@ fn main() {
             skip_lines,
             append,
             overwrite,
+            resume,
             input_file,
             output_file,
-        } => translator::translate(skip_lines, append, overwrite, input_file, output_file),
+        } => translator::translate(
+            skip_lines,
+            append,
+            overwrite,
+            resume,
+            input_file,
+            output_file,
+        ),
         Action::Download {
             ncode_url,
             output_file,
