@@ -52,6 +52,15 @@
       "split": false
     },
     {
+      "key": "name-like-with-O",
+      "name": "Name like terms with O",
+      "split": false,
+      "honorifics": [
+        true,
+        false
+      ]
+    },
+    {
       "key": "name-like",
       "name": "Name like terms",
       "split": false,
@@ -379,10 +388,12 @@
       "分解": "Decomposition",
       "再成": "Regrowth"
       },
-    "name-like": {
+    "name-like-with-O": {
       "Onii": "お兄",
+      "Onee": "お姉"
+    },
+    "name-like": {
       "Nii": "兄",
-      "Onee": "お姉",
       "Nee": "姉"
     },
     "cleaning-up": {

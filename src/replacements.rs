@@ -75,7 +75,7 @@ fn verify_rules(rep: &Replacements) -> Result<(), String> {
             Some(_) => (),
             None => {
                 return Err(format!(
-                    "Key [{}] from rules not found in replacements json",
+                    "Key [{}] from rules not found in replacements json \"contents\"",
                     rule.key
                 ))
             }
