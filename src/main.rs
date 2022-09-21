@@ -6,6 +6,7 @@ use std::time::Instant;
 mod ncode;
 mod renderer;
 mod replacements;
+mod speak;
 mod translator;
 
 #[derive(Parser)]
@@ -33,6 +34,7 @@ enum Action {
         #[clap(short, long, default_value = "onegai-combined.html")]
         output_file: PathBuf,
         /// Input files in different languages
+        #[clap(min_values(1))] // this didn't work.
         input_files: Vec<PathBuf>,
     },
     /// Replace the terms according to rules on json file
@@ -90,6 +92,13 @@ enum Action {
         /// Output file to save the chapter
         output_file: PathBuf,
     },
+    Speak {
+        /// the input file is in Japanese not English
+        #[clap(short, long, action)]
+        is_jp: bool,
+        /// Input file path in English or Japanese
+        input_file: PathBuf,
+    },
 }
 
 fn main() {
@@ -127,6 +136,7 @@ fn main() {
             ncode_url,
             output_file,
         } => ncode::download_ncode(ncode_url, output_file),
+        Action::Speak { is_jp, input_file } => speak::gspeak(input_file, is_jp),
     };
     let duration = start.elapsed();
     match tool_result {

@@ -60,7 +60,10 @@ pub fn make_html(
             BufReader::new(file).lines().count()
         })
         .collect();
-    let num_lines: usize = *lines.iter().min().unwrap();
+    let num_lines: usize = *(match lines.iter().min() {
+        Some(v) => v,
+        None => return Err(format!("Empty File list: {:?}", input_files)),
+    });
 
     let mut readers: Vec<Lines<BufReader<File>>> = input_files
         .iter()
