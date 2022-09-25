@@ -99,7 +99,7 @@ fn replace_string(
         );
         if rule.honorifics.is_none() {
             let rep_dict: HashMap<String, String> =
-                match serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string()) {
+                match serde_json::from_value(rep.contents.get(&rule.key).unwrap().to_owned()) {
                     Ok(m) => m,
                     Err(e) => {
                         return Err(format!(
@@ -113,7 +113,7 @@ fn replace_string(
             if rule.split {
                 let (first_name, last_name) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, Vec<String>> =
-                    match serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string()) {
+                    match serde_json::from_value(rep.contents.get(&rule.key).unwrap().to_owned()) {
                         Ok(m) => m,
                         Err(e) => {
                             return Err(format!(
@@ -136,7 +136,7 @@ fn replace_string(
             } else {
                 let (first_name, _) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, String> =
-                    match serde_json::from_str(&rep.contents.get(&rule.key).unwrap().to_string()) {
+                    match serde_json::from_value(rep.contents.get(&rule.key).unwrap().to_owned()) {
                         Ok(m) => m,
                         Err(e) => {
                             return Err(format!(
@@ -145,7 +145,8 @@ fn replace_string(
                             ))
                         }
                     };
-                let mut hon_dict = HashMap::<String, String>::new();
+                let mut hon_dict =
+                    HashMap::<String, String>::with_capacity(rep_dict.len() * rep.honorifics.len());
 
                 for (en_name, jp_name) in rep_dict.iter() {
                     for (hon_jp, hon_en) in rep.honorifics.iter() {
@@ -157,7 +158,9 @@ fn replace_string(
                 }
                 output = replace_hashmap(output, &hon_dict);
                 if !first_name {
-                    output = replace_hashmap(output, &rep_dict);
+                    for (en_name, jp_name) in rep_dict.iter() {
+                        output = replace_single(output, jp_name, en_name);
+                    }
                 }
             }
         }
@@ -176,6 +179,11 @@ fn replace_names(
     let mut output: String = contents;
     for (en_name, jp_names) in rep_dict.iter() {
         for (hon_jp, hon_en) in honorifics.iter() {
+            output = replace_single(
+                output,
+                &format!("{}{}", jp_names.join("・"), hon_jp),
+                &format!("{}-{}", en_name, hon_en),
+            );
             output = replace_single(
                 output,
                 &format!("{}{}", jp_names.join(""), hon_jp),
@@ -228,10 +236,8 @@ fn replace_hashmap(contents: String, map: &HashMap<String, String>) -> String {
 }
 
 fn replace_single(contents: String, find: &String, replace: &String) -> String {
-    let mut output: String = contents;
-    let count = output.matches(find).count();
+    let count = contents.matches(find).count();
     if count > 0 {
-        output = output.replace(find, &replace);
         println!(
             "{} [{}] → {} ({})",
             find,
@@ -239,6 +245,7 @@ fn replace_single(contents: String, find: &String, replace: &String) -> String {
             replace,
             format!("{}", count).bold()
         );
+        return contents.replace(find, &replace);
     }
-    return output;
+    return contents;
 }

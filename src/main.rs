@@ -66,6 +66,12 @@ enum Action {
         /// Number of starting lines to skip translation
         #[clap(short, long, default_value = "0")]
         skip_lines: usize,
+        /// Line content pattern to skip from translation
+        ///
+        /// Use this for any tags, comments, images etc that you want
+        /// to keep as it is.
+        #[clap(short, long, default_value = "^<.*>$")]
+        pattern_skip: String,
         /// Append to the output file
         #[clap(short, long, action)]
         append: bool,
@@ -92,6 +98,7 @@ enum Action {
         /// Output file to save the chapter
         output_file: PathBuf,
     },
+    /// Use google speak service to speak out the file [experimental]
     Speak {
         /// the input file is in Japanese not English
         #[clap(short, long, action)]
@@ -119,6 +126,7 @@ fn main() {
         } => replacements::replace_from_json(threshold, replacement_json, input_file, output_file),
         Action::Translate {
             skip_lines,
+            pattern_skip,
             append,
             overwrite,
             resume,
@@ -126,6 +134,7 @@ fn main() {
             output_file,
         } => translator::translate(
             skip_lines,
+            pattern_skip,
             append,
             overwrite,
             resume,

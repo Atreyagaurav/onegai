@@ -50,20 +50,10 @@ pub fn make_html(
     output_file: PathBuf,
     input_files: Vec<PathBuf>,
 ) -> Result<(), String> {
-    let lines: Vec<usize> = input_files
-        .iter()
-        .map(|f| {
-            let file = File::open(&f).expect(&format!(
-                "Couldn't open input file {}.",
-                f.as_os_str().to_str().unwrap()
-            ));
-            BufReader::new(file).lines().count()
-        })
-        .collect();
-    let num_lines: usize = *(match lines.iter().min() {
-        Some(v) => v,
-        None => return Err(format!("Empty File list: {:?}", input_files)),
-    });
+    let num_lines = match minimum_common_line(&input_files, !simple_html) {
+        Ok(n) => n,
+        Err(e) => return Err(e),
+    };
 
     let mut readers: Vec<Lines<BufReader<File>>> = input_files
         .iter()
@@ -88,10 +78,6 @@ pub fn make_html(
             Ok(_) => return Ok(()),
             Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
         };
-    }
-
-    if !lines.iter().all(|v| *v == lines[0]) {
-        return Err(format!("{}: {:?}", "File lengths doesn't match", lines));
     }
 
     let contents = get_file_contents(readers.iter_mut(), num_lines);
@@ -167,4 +153,31 @@ fn get_file_contents(
         }
     }
     return lines;
+}
+
+fn minimum_common_line(input_files: &Vec<PathBuf>, check_len: bool) -> Result<usize, String> {
+    if input_files.len() == 0 {
+        return Err(format!("Empty File list: {:?}", input_files));
+    }
+    let mut lines = Vec::<usize>::with_capacity(input_files.len());
+    let mut min_lines: usize = usize::max_value();
+    for (i, f) in input_files.iter().enumerate() {
+        match File::open(&f) {
+            Ok(fil) => lines.push(BufReader::new(fil).lines().count()),
+            Err(e) => {
+                return Err(format!(
+                    "Couldn't open input file {}.\nError: {:?}",
+                    f.as_os_str().to_str().unwrap(),
+                    e
+                ));
+            }
+        };
+        if lines[i] < min_lines {
+            min_lines = lines[i];
+        }
+    }
+    if check_len && !lines.iter().all(|v| *v == lines[0]) {
+        return Err(format!("{}: {:?}", "File lengths don't match", lines));
+    }
+    return Ok(min_lines);
 }

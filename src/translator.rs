@@ -1,4 +1,5 @@
 use indicatif::{ProgressBar, ProgressStyle};
+use regex::Regex;
 use rust_bert::pipelines::common::ModelType;
 use rust_bert::pipelines::translation::{Language, TranslationModelBuilder};
 use std::fs::{File, OpenOptions};
@@ -7,12 +8,18 @@ use std::path::PathBuf;
 
 pub fn translate(
     skip_lines: usize,
+    pattern_skip: String,
     append: bool,
     overwrite: bool,
     resume: bool,
     input_file: PathBuf,
     output_file: PathBuf,
 ) -> Result<(), String> {
+    let skip_rx = match Regex::new(&pattern_skip) {
+        Ok(r) => r,
+        Err(e) => return Err(format!("Invalid regex: {:?}", e)),
+    };
+
     let file = match File::open(&input_file) {
         Ok(f) => f,
         Err(e) => {
@@ -73,12 +80,21 @@ pub fn translate(
     for (i, input_line) in reader_lines.enumerate() {
         line = input_line.unwrap();
         if line.trim() != "" {
-            let output2 = model.translate(&[&line], Language::Japanese, Language::English);
-            for sentence in output2 {
-                match writer.write_all(sentence.join(" ").as_bytes()) {
+            if skip_rx.is_match(&line) {
+                match writer.write_all(line.as_bytes()) {
                     Ok(_) => (),
                     Err(e) => return Err(format!("{}\n{:?}", "Couldn't Write to Output File", e)),
                 };
+            } else {
+                let output2 = model.translate(&[&line], Language::Japanese, Language::English);
+                for sentence in output2 {
+                    match writer.write_all(sentence.join(" ").as_bytes()) {
+                        Ok(_) => (),
+                        Err(e) => {
+                            return Err(format!("{}\n{:?}", "Couldn't Write to Output File", e))
+                        }
+                    };
+                }
             }
         }
         match writer.write_all(b"\n") {

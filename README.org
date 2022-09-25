@@ -33,15 +33,8 @@ Runs from =cargo run=.
 ** Linux
 If you don't want to install rust and compile it, download the zip from [[https://github.com/Atreyagaurav/onegai/releases/][releases]] and then install =pytorch= so that you have the libraries for it. Then just run the executable.
 
-The important libraries from torch that should be present are:
-- libtorch_cpu.so => /usr/lib/libtorch_cpu.so 
-- libc10.so => /usr/lib/libc10.so
-- libgomp-52f2fd74.so.1 => /usr/lib/libgomp-52f2fd74.so.1
-
-Some problem with shared libraries. Need to look at it later.
-
 ** Windows
-The compiled executable is in [[https://github.com/Atreyagaurav/onegai/releases/][releases]]. Download the =onegai-windows.zip= and run the executable =onegai.exe= from powershell (cmd doesn't do well with escape sequences). All the torch dlls are included in the zip.
+The compiled executable is in [[https://github.com/Atreyagaurav/onegai/releases/][releases]]. Download the =onegai-windows.zip= and run the executable =onegai.exe= from powershell (cmd doesn't do well with escape sequences). All the dlls are included in the zip.
 
 * Usage
 Use =-h= flag for usage instructions.
