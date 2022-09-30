@@ -99,14 +99,14 @@ fn get_simple_html(
         title {(title)}
         @for i in 1..=num_lines {
             @let linetag=format!("line-{}",i);
-            div id=(linetag) {
+            div.chap-line id=(linetag) {
         div {
             @for reader in readers.iter_mut() {
             @match reader.next() {
-                Some(line) => div {(line.unwrap())},
-                None => div {""},
+                Some(line) => div.chap-line-contents {(line.unwrap())},
+                None => div.chap-line-contents {""},
             }
-        br;
+    br;
             }
         }}
         }}
@@ -115,20 +115,20 @@ fn get_simple_html(
 fn get_chapter_html(title: String, chap_lines: Vec<ChapterLine>) -> Markup {
     html! {
     (DOCTYPE)
-        title {(title)}
+            title {(title)}
         @for line in chap_lines.iter() {
             @let linetag=format!("line-{}", line.linenum);
-            div id=(linetag) {
+            div.chap-line id=(linetag) {
         @match line.linetype {
-            LineType::Contents => div {
+            LineType::Contents => div.chap-line-contents {
             @for line in line.contents.iter() {
                 (line)
                 br;
             }
             },
-            LineType::ParagraphBreak => p {}
-            }
-        }}
+            LineType::ParagraphBreak => p.para-break {}
+        }
+            }}
     }
 }
 
