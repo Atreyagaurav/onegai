@@ -40,12 +40,9 @@ impl Ncode {
     fn save(&self, outfile: PathBuf) -> Result<(), String> {
         let output_file = File::create(outfile).expect("Couldn't create file.");
         let mut writer = LineWriter::new(output_file);
-        match self.download() {
-            Ok(contents) => match writer.write(&format!("{}\n", contents.trim()).into_bytes()) {
-                Ok(_) => (),
-                Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
-            },
-            Err(e) => return Err(e),
+        match writer.write(&format!("{}\n", (self.download()?).trim()).into_bytes()) {
+            Ok(_) => (),
+            Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
         }
         Ok(())
     }
@@ -70,9 +67,6 @@ pub fn download_ncode(address: String, outfile: PathBuf) -> Result<(), String> {
     };
 
     println!("{}: {}", "Requesting".green().bold(), chapter.url());
-    match chapter.save(outfile) {
-        Ok(_) => (),
-        Err(e) => return Err(e),
-    };
+    chapter.save(outfile)?;
     Ok(())
 }

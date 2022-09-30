@@ -50,10 +50,7 @@ pub fn make_html(
     output_file: PathBuf,
     input_files: Vec<PathBuf>,
 ) -> Result<(), String> {
-    let num_lines = match minimum_common_line(&input_files, !simple_html) {
-        Ok(n) => n,
-        Err(e) => return Err(e),
-    };
+    let num_lines = minimum_common_line(&input_files, !simple_html)?;
 
     let mut readers: Vec<Lines<BufReader<File>>> = input_files
         .iter()

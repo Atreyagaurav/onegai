@@ -40,19 +40,13 @@ pub fn replace_from_json(
         Err(e) => return Err(format!("{}\n{:?}", "Can't parse Json", e)),
     };
 
-    match verify_rules(&rep_cont) {
-        Ok(_) => (),
-        Err(e) => return Err(e),
-    };
+    verify_rules(&rep_cont)?;
 
     let input_file_contents = match fs::read_to_string(input_file) {
         Ok(c) => c,
         Err(e) => return Err(format!("{}\n{:?}", "Cannot read input file.", e)),
     };
-    let output_file_contents = match replace_string(&rep_cont, input_file_contents, threshold) {
-        Ok(c) => c,
-        Err(e) => return Err(e),
-    };
+    let output_file_contents = replace_string(&rep_cont, input_file_contents, threshold)?;
     match fs::write(output_file, output_file_contents) {
         Ok(_) => (),
         Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file.", e)),
@@ -122,17 +116,14 @@ fn replace_string(
                             ))
                         }
                     };
-                output = match replace_names(
+                output = replace_names(
                     output,
                     &rep_dict,
                     &rep.honorifics,
                     first_name,
                     last_name,
                     threshold,
-                ) {
-                    Ok(o) => o,
-                    Err(e) => return Err(e),
-                };
+                )?;
             } else {
                 let (first_name, _) = rule.honorifics.unwrap();
                 let rep_dict: HashMap<String, String> =
