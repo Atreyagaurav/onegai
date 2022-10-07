@@ -1,7 +1,33 @@
+use clap::Args;
 use colored::Colorize;
 use serde::{Deserialize, Serialize};
 use serde_json;
 use std::{collections::HashMap, fs, path::PathBuf};
+
+#[derive(Args)]
+pub struct CliArgs {
+    /// Replacement Threshold for names without honorifics
+    ///
+    /// For example, threshold of 3 means names with single kanji
+    /// won't be replaced if it comes without honorifics. To make
+    /// it easier to decide on this the length of strings are
+    /// shown in square brackets after them.
+    #[arg(short, long, default_value = "3")]
+    threshold: usize,
+    /// Replacement Json
+    ///
+    /// Replacement Json must have 3 fields, rules honorifics and
+    /// contents.  `rules' contains the order of replacement and
+    /// extra informations, honorifics are list of honorifics to
+    /// cycle through for each name, and contents are the
+    /// replacement contents.
+    #[arg(short, long)]
+    replacement_json: PathBuf,
+    /// Input file
+    input_file: PathBuf,
+    /// Output file
+    output_file: PathBuf,
+}
 
 #[derive(Debug, Deserialize, Serialize)]
 struct Character {
@@ -25,13 +51,8 @@ struct Replacements {
     contents: serde_json::Value,
 }
 
-pub fn replace_from_json(
-    threshold: usize,
-    replacement_json: PathBuf,
-    input_file: PathBuf,
-    output_file: PathBuf,
-) -> Result<(), String> {
-    let replace_json_contents = match fs::read_to_string(replacement_json) {
+pub fn replace_from_json(args: CliArgs) -> Result<(), String> {
+    let replace_json_contents = match fs::read_to_string(args.replacement_json) {
         Ok(c) => c,
         Err(e) => return Err(format!("{}\n{:?}", "Cannot read Replacement File.", e,)),
     };
@@ -42,12 +63,12 @@ pub fn replace_from_json(
 
     verify_rules(&rep_cont)?;
 
-    let input_file_contents = match fs::read_to_string(input_file) {
+    let input_file_contents = match fs::read_to_string(args.input_file) {
         Ok(c) => c,
         Err(e) => return Err(format!("{}\n{:?}", "Cannot read input file.", e)),
     };
-    let output_file_contents = replace_string(&rep_cont, input_file_contents, threshold)?;
-    match fs::write(output_file, output_file_contents) {
+    let output_file_contents = replace_string(&rep_cont, input_file_contents, args.threshold)?;
+    match fs::write(args.output_file, output_file_contents) {
         Ok(_) => (),
         Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file.", e)),
     };

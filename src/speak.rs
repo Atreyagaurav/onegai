@@ -1,23 +1,33 @@
+use clap::Args;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 use std::path::PathBuf;
 use tts_rust::{languages::Languages, GTTSClient};
 
-pub fn gspeak(input_file: PathBuf, is_jp: bool) -> Result<(), String> {
+#[derive(Args)]
+pub struct CliArgs {
+    /// the input file is in Japanese not English
+    #[arg(short, long, action)]
+    is_jp: bool,
+    /// Input file path in English or Japanese
+    input_file: PathBuf,
+}
+
+pub fn gspeak(args: CliArgs) -> Result<(), String> {
     let narrator: GTTSClient = GTTSClient {
         volume: 1.0,
-        language: if is_jp {
+        language: if args.is_jp {
             Languages::Japanese
         } else {
             Languages::English
         }, // use the Languages enum
     };
-    let file = match File::open(&input_file) {
+    let file = match File::open(&args.input_file) {
         Ok(f) => f,
         Err(e) => {
             return Err(format!(
                 "Couldn't open input file: {:?}\n{:?}",
-                &input_file, e
+                &args.input_file, e
             ))
         }
     };

@@ -1,8 +1,28 @@
+use clap::Args;
 use maud::{html, Markup, DOCTYPE};
 use std::fs::File;
 use std::io::{BufRead, BufReader, LineWriter, Lines, Write};
 use std::path::PathBuf;
 use std::slice::IterMut;
+
+#[derive(Args)]
+pub struct CliArgs {
+    /// Title of the Generated HTML
+    #[arg(short, long, default_value = "Onegai | Combined Content")]
+    title: String,
+    /// Make a simple html without any contents check
+    ///
+    /// When your translations are not made with onegai tools, the
+    /// lines might not match, this will help you generate simple
+    /// html to see where the descripancy is at.
+    #[arg(short, long, action)]
+    simple_html: bool,
+    /// Output file (html) to save combined page.
+    #[arg(short, long, default_value = "onegai-combined.html")]
+    output_file: PathBuf,
+    /// Input files in different languages
+    input_files: Vec<PathBuf>,
+}
 
 struct ChapterLine {
     linetype: LineType,
@@ -44,15 +64,11 @@ impl ChapterLine {
     }
 }
 
-pub fn make_html(
-    title: String,
-    simple_html: bool,
-    output_file: PathBuf,
-    input_files: Vec<PathBuf>,
-) -> Result<(), String> {
-    let num_lines = minimum_common_line(&input_files, !simple_html)?;
+pub fn make_html(args: CliArgs) -> Result<(), String> {
+    let num_lines = minimum_common_line(&args.input_files, !args.simple_html)?;
 
-    let mut readers: Vec<Lines<BufReader<File>>> = input_files
+    let mut readers: Vec<Lines<BufReader<File>>> = args
+        .input_files
         .iter()
         .map(|fp| {
             let file = File::open(&fp).unwrap();
@@ -61,14 +77,14 @@ pub fn make_html(
         })
         .collect();
 
-    let out_file = match File::create(&output_file) {
+    let out_file = match File::create(&args.output_file) {
         Ok(f) => f,
         Err(e) => return Err(format!("{}\n{:?}", "Cannot create output file", e)),
     };
     let mut writer = LineWriter::new(out_file);
-    if simple_html {
+    if args.simple_html {
         match writer.write(
-            get_simple_html(title, num_lines, readers)
+            get_simple_html(args.title, num_lines, readers)
                 .into_string()
                 .as_bytes(),
         ) {
@@ -78,11 +94,15 @@ pub fn make_html(
     }
 
     let contents = get_file_contents(readers.iter_mut(), num_lines);
-    match writer.write(get_chapter_html(title, contents).into_string().as_bytes()) {
+    match writer.write(
+        get_chapter_html(args.title, contents)
+            .into_string()
+            .as_bytes(),
+    ) {
         Ok(_) => (),
         Err(e) => return Err(format!("{}\n{:?}", "Cannot write to output file", e)),
     };
-    println!("Output saved: {:?}", output_file);
+    println!("Output saved: {:?}", args.output_file);
     Ok(())
 }
 

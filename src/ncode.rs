@@ -1,3 +1,4 @@
+use clap::Args;
 use colored::Colorize;
 use regex::Regex;
 use reqwest;
@@ -6,6 +7,19 @@ use select::{document::Document, node::Node, predicate::Attr};
 use std::fs::File;
 use std::io::{LineWriter, Write};
 use std::path::PathBuf;
+
+#[derive(Args)]
+pub struct CliArgs {
+    /// Chapter url
+    ///
+    /// Chapter url should be from syosetu.com. Examples of
+    /// supported urls are:
+    /// https://ncode.syosetu.com/n2267be/561/,
+    /// ncode.syosetu.com/n2267be/561/, n2267be/561/, etc
+    ncode_url: String,
+    /// Output file to save the chapter
+    output_file: PathBuf,
+}
 
 // url example: https://ncode.syosetu.com/n3286gu/1/
 
@@ -48,10 +62,10 @@ impl Ncode {
     }
 }
 
-pub fn download_ncode(address: String, outfile: PathBuf) -> Result<(), String> {
+pub fn download_ncode(args: CliArgs) -> Result<(), String> {
     let ncode_re =
         Regex::new(r"^(https?://)?(ncode.syosetu.com/)?([a-z0-9]+)/([a-z0-9]+)/?$").unwrap();
-    let caps = match ncode_re.captures(&address) {
+    let caps = match ncode_re.captures(&args.ncode_url) {
         Some(m) => m,
         None => {
             return Err(format!(
@@ -67,6 +81,6 @@ pub fn download_ncode(address: String, outfile: PathBuf) -> Result<(), String> {
     };
 
     println!("{}: {}", "Requesting".green().bold(), chapter.url());
-    chapter.save(outfile)?;
+    chapter.save(args.output_file)?;
     Ok(())
 }

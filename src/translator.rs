@@ -1,3 +1,4 @@
+use clap::Args;
 use indicatif::{ProgressBar, ProgressStyle};
 use regex::Regex;
 use rust_bert::pipelines::common::ModelType;
@@ -6,45 +7,63 @@ use std::fs::{File, OpenOptions};
 use std::io::{BufRead, BufReader, ErrorKind, LineWriter, Write};
 use std::path::PathBuf;
 
-pub fn translate(
+#[derive(Args)]
+pub struct CliArgs {
+    /// Number of starting lines to skip translation
+    #[arg(short, long, default_value = "0")]
     skip_lines: usize,
+    /// Line content pattern to skip from translation
+    ///
+    /// Use this for any tags, comments, images etc that you want
+    /// to keep as it is.
+    #[arg(short, long, default_value = "^<.*>$")]
     pattern_skip: String,
+    /// Append to the output file
+    #[arg(short, long, action)]
     append: bool,
+    /// Overwrite the output file
+    #[arg(short, long, action)]
     overwrite: bool,
+    /// Resume the previous Translation
+    #[arg(short, long, action)]
     resume: bool,
+    /// Input file in Japanese
     input_file: PathBuf,
+    /// Output file in English
     output_file: PathBuf,
-) -> Result<(), String> {
-    let skip_rx = match Regex::new(&pattern_skip) {
+}
+
+pub fn translate(args: CliArgs) -> Result<(), String> {
+    let skip_rx = match Regex::new(&args.pattern_skip) {
         Ok(r) => r,
         Err(e) => return Err(format!("Invalid regex: {:?}", e)),
     };
 
-    let file = match File::open(&input_file) {
+    let file = match File::open(&args.input_file) {
         Ok(f) => f,
         Err(e) => {
             return Err(format!(
                 "Couldn't open input file: {:?}\n{:?}",
-                &input_file, e
+                &args.input_file, e
             ))
         }
     };
     let mut reader_lines = BufReader::new(file).lines();
 
-    let append = resume || append;
-    let skip_lines = if resume {
-        count_lines_in_file(&output_file)
+    let append = args.resume || args.append;
+    let skip_lines = if args.resume {
+        count_lines_in_file(&args.output_file)
     } else {
-        skip_lines
+        args.skip_lines
     };
 
     let output_file = match OpenOptions::new()
         .write(true)
         .create(true)
-        .create_new(!(overwrite || append))
+        .create_new(!(args.overwrite || append))
         .append(append)
         .truncate(!append)
-        .open(output_file)
+        .open(args.output_file)
     {
         Ok(file) => file,
         Err(error) => match error.kind() {
@@ -71,7 +90,7 @@ pub fn translate(
         Err(e) => return Err(e.to_string()),
     };
 
-    let pbar = get_progress_bar(input_file, skip_lines);
+    let pbar = get_progress_bar(args.input_file, skip_lines);
     let mut line: String;
     for _ in 0..skip_lines {
         reader_lines.next();
